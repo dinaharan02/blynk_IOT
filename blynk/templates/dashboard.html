@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IoT Dashboard</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: white;
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        .status {
+            font-size: 18px;
+            margin: 10px;
+        }
+
+        .online { color: #22c55e; }
+        .offline { color: #ef4444; }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 15px;
+            width: 220px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .value {
+            font-size: 32px;
+            margin-top: 10px;
+        }
+
+        .label {
+            font-size: 18px;
+            color: #94a3b8;
+        }
+
+        .offline-card {
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🌐 IoT Smart Dashboard</h1>
+
+    <div class="status" id="status">Checking...</div>
+
+    <div class="container">
+        <div class="card" id="tempCard">
+            <div class="label">🌡 Temperature</div>
+            <div class="value" id="temp">--</div>
+        </div>
+
+        <div class="card" id="humCard">
+            <div class="label">💧 Humidity</div>
+            <div class="value" id="hum">--</div>
+        </div>
+
+        <div class="card" id="soilCard">
+            <div class="label">🌱 Soil</div>
+            <div class="value" id="soil">--</div>
+            <div id="soilStatus"></div>
+        </div>
+    </div>
+
+<script>
+function fetchData() {
+    fetch('/api/realtime/')
+        .then(res => res.json())
+        .then(data => {
+
+            const statusEl = document.getElementById("status");
+
+            if (!data.is_connected) {
+                statusEl.innerHTML = "🔴 Device Offline";
+                statusEl.className = "status offline";
+
+                document.getElementById("temp").innerText = "--";
+                document.getElementById("hum").innerText = "--";
+                document.getElementById("soil").innerText = "--";
+                document.getElementById("soilStatus").innerText = "";
+
+                document.querySelectorAll(".card").forEach(c => c.classList.add("offline-card"));
+                return;
+            }
+
+            statusEl.innerHTML = "🟢 Device Online";
+            statusEl.className = "status online";
+
+            document.getElementById("temp").innerText = data.temperature + " °C";
+            document.getElementById("hum").innerText = data.humidity + " %";
+            document.getElementById("soil").innerText = data.soil;
+            document.getElementById("soilStatus").innerText = data.soil_status;
+
+            document.querySelectorAll(".card").forEach(c => c.classList.remove("offline-card"));
+        })
+        .catch(err => console.error(err));
+}
+
+// Refresh every 2 sec
+setInterval(fetchData, 2000);
+fetchData();
+</script>
+
+</body>
+</html>
